@@ -15,16 +15,32 @@
 ;; Util function
 
 (defn submithandler []
-  (let [online (:online @app-state)]
+  (let [online (:online @app-state)
+        data1 (:data1 @app-state)
+        data2 (:data2 @app-state)
+        data3 (:data3 @app-state)]
     (.log js/console "submit handler!!!") 
     (if online
       (do 
         (.log js/console "online")
-        (.alert js/window "Data has been saved online. \n(But not in this demo)"))
+        (.log js/console "Data has been saved online. (But not in this demo)"))
       (do
         (.log js/console "offline")
-        (.alert js/window "Data has been saved offline.")))))
+        (.setItem (.-sessionStorage js/window) (str :data1) (str data1))
+        (.setItem (.-sessionStorage js/window) (str :data2) (str data2))
+        (.setItem (.-sessionStorage js/window) (str :data3) (str data3))
+        (.log js/console "Data has been saved offline.")))))
       
+(defn loaddata []
+  (let [online (:online @app-state)]
+    (if online
+      (.log js/console "Currently online: \n data could be loaded from server")
+      (let [data1 (.getItem (.-sessionStorage js/window) (str :data1))
+            data2 (.getItem (.-sessionStorage js/window) (str :data2))
+            data3 (.getItem (.-sessionStorage js/window) (str :data3))]
+        (swap! app-state assoc :data1 data1)
+        (swap! app-state assoc :data2 data2)
+        (swap! app-state assoc :data3 data3)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -107,4 +123,5 @@
   (dev-setup)
   (addHandlerForOnOff)
   (reload)
-  (handleOnOff))
+  (handleOnOff)
+  (loaddata))
