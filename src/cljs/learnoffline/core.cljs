@@ -103,6 +103,8 @@
                   (.getElementById js/document "app")))
 
 (defn ^:export main []
+  (.log js/console "main")
   (dev-setup)
   (addHandlerForOnOff)
-  (reload))
+  (reload)
+  (handleOnOff))
