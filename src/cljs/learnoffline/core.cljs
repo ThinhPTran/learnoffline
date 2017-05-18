@@ -11,8 +11,8 @@
                  :data2 "data2"
                  :data3 "data3"}))
 
-(defonce worker (js/Worker. "js/doWork.js"))
-
+(defonce worker1 (js/Worker. "js/doWork1.js"))
+(defonce worker2 (js/Worker. "js/doWork2.js"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Util function
@@ -47,9 +47,14 @@
 
 (defn listenToWorker []
   (.addEventListener 
-    worker 
+    worker1 
     "message" 
-    (fn [e] (.log js/console (str "Worker said: " (.-data e))))
+    (fn [e] (.log js/console (str "Worker1 said: " (.-data e))))
+    false)
+  (.addEventListener 
+    worker2 
+    "message" 
+    (fn [e] (.log js/console (str "Worker2 said: " (.-data e))))
     false)
   (.log js/console "register to listen to Worker"))
 
@@ -88,16 +93,42 @@
                                  (let [v (.-value (gdom/getElement "data3"))]
                                    (swap! app-state assoc :data3 v)))}]]]))
 (defn submit []
-  [:button {:type "button"
-            :onClick #(submithandler)}
-   "Save Data"])
+  [:div.row
+   [:button {:type "button"
+             :onClick #(submithandler)}
+    "Save Data"]])
 
-(defn talkToWorker []
-  [:button {:type "button"
-            :onClick #(do
-                        (.postMessage worker "Thinh say hello!!!")
-                        (.log js/console "talk to Worker"))}
-   "Talk to Worker"])
+(defn talkToWorker1 []
+  [:div.row
+   [:button {:type "button"
+             :onClick #(do
+                         (.postMessage worker1 "Thinh say hello to Worker1!!!")
+                         (.log js/console "talk to Worker1"))}
+    "Talk to Worker1"]])
+
+(defn sayHiWorker2 []
+  [:div.row
+   [:button {:type "button"
+             :onClick #(do 
+                         (.postMessage worker2 (clj->js {:cmd "start" :msg "Hi"}))
+                         (.log js/console "say Hello to Worker2"))}
+    "Say Hi to Worker2"]])
+
+(defn UnknownCmd []
+  [:div.row
+   [:button {:type "button"
+             :onClick #(do 
+                         (.postMessage worker2 (clj->js {:cmd "foobard" :msg "???"}))
+                         (.log js/console "say UnknownCmd to Worker2"))}
+    "Say UnknownCmd to Worker2"]])
+
+(defn sayStopWorker2 []
+  [:div.row
+   [:button {:type "button"
+             :onClick #(do 
+                         (.postMessage worker2 (clj->js {:cmd "stop" :msg "Bye"}))
+                         (.log js/console "say Bye to Worker2"))}
+    "Say Bye to Worker2"]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Page
@@ -108,10 +139,13 @@
    [:h1 "Offline test page"]
    [:form#mainform {:action "index.html" :method "post"}
     [:fieldset
-      [:legend "Udpate data"]
-      [maindata]
-      [submit]
-      [talkToWorker]]]
+     [:legend "Udpate data"]
+     [maindata]
+     [submit]
+     [talkToWorker1]
+     [sayHiWorker2]
+     [UnknownCmd]
+     [sayStopWorker2]]]
    [:p "Use File > Work Offline in Firefox to switch online/offline modes."]
    [:p 
     [:a {:href "index.html"} "Refresh the page"] " in offline mode to reload data from store."]])
