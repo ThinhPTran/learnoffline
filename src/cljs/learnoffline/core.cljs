@@ -11,6 +11,9 @@
                  :data2 "data2"
                  :data3 "data3"}))
 
+(defonce worker (js/Worker. "js/doWork.js"))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Util function
 
@@ -41,6 +44,14 @@
         (swap! app-state assoc :data1 data1)
         (swap! app-state assoc :data2 data2)
         (swap! app-state assoc :data3 data3)))))
+
+(defn listenToWorker []
+  (.addEventListener 
+    worker 
+    "message" 
+    (fn [e] (.log js/console (str "Worker said: " (.-data e))))
+    false)
+  (.log js/console "register to listen to Worker"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -79,7 +90,14 @@
 (defn submit []
   [:button {:type "button"
             :onClick #(submithandler)}
-   "Save Data"])    
+   "Save Data"])
+
+(defn talkToWorker []
+  [:button {:type "button"
+            :onClick #(do
+                        (.postMessage worker "Thinh say hello!!!")
+                        (.log js/console "talk to Worker"))}
+   "Talk to Worker"])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Page
@@ -92,7 +110,8 @@
     [:fieldset
       [:legend "Udpate data"]
       [maindata]
-      [submit]]]
+      [submit]
+      [talkToWorker]]]
    [:p "Use File > Work Offline in Firefox to switch online/offline modes."]
    [:p 
     [:a {:href "index.html"} "Refresh the page"] " in offline mode to reload data from store."]])
@@ -124,4 +143,9 @@
   (addHandlerForOnOff)
   (reload)
   (handleOnOff)
-  (loaddata))
+  (loaddata)
+  (listenToWorker))
+
+
+
+
